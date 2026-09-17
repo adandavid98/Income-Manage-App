@@ -27,13 +27,14 @@ object FirebaseAuthManager {
     private const val KEY_NAME = "user_name"
     private const val KEY_PHOTO = "user_photo"
 
-    // Configuration from config.js in web project
-    const val API_KEY = "AIzaSyBuxS69sX4zysLjJ7nVPE1EmLqS81iP9PM"
-    const val APPLICATION_ID = "1:487874626391:web:d0eecfea10a292cd9d7412"
+    // Configuration from google-services.json registered for Android
+    const val API_KEY = "AIzaSyB3yKAW4v9T9k5ycrOCBF_ndEJdbSAxa4Q"
+    const val APPLICATION_ID = "1:487874626391:android:dd7a3b0fde6e6cec9d7412"
     const val PROJECT_ID = "gestion-ingresos-2ee22"
     const val STORAGE_BUCKET = "gestion-ingresos-2ee22.firebasestorage.app"
     const val GCM_SENDER_ID = "487874626391"
     const val AUTH_DOMAIN = "gestion-ingresos-2ee22.firebaseapp.com"
+    const val WEB_CLIENT_ID = "487874626391-o40ito7vbaadt7ssatvlgl427b0juuuv.apps.googleusercontent.com"
 
     private val _currentUser = MutableStateFlow<FirebaseUserProfile?>(null)
     val currentUser: StateFlow<FirebaseUserProfile?> = _currentUser.asStateFlow()

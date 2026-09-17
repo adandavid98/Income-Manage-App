@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.incomemanage.data.FirebaseAuthManager
 import com.example.incomemanage.data.FirebaseUserProfile
 import com.example.incomemanage.data.FinanceRepository
+import com.example.incomemanage.data.FirestoreManager
 import com.example.incomemanage.model.ActivityLog
 import com.example.incomemanage.model.PersonalExpense
 import com.example.incomemanage.model.TreasuryTransaction
@@ -92,10 +93,19 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         FirebaseAuthManager.init(application)
-        // If user is restored from saved session or Firebase, proceed to menu
         if (FirebaseAuthManager.currentUser.value != null) {
             _currentScreen.value = AppScreen.MENU
+            triggerFirestoreSync()
         }
+    }
+
+    fun triggerFirestoreSync() {
+        val uid = FirebaseAuthManager.currentUser.value?.uid ?: ""
+        repository.startFirestoreSync(
+            userId = uid,
+            treasurySpaceHash = _treasurySpaceHash.value,
+            personalSpaceHash = _personalSpaceHash.value
+        )
     }
 
     fun signInWithGoogle(
@@ -109,6 +119,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
             if (success) {
                 _currentScreen.value = AppScreen.MENU
                 snackbarMessage.value = "Sesión iniciada con Google exitosamente."
+                triggerFirestoreSync()
                 onComplete(true)
             } else {
                 _authErrorMessage.value = message
@@ -121,9 +132,11 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         FirebaseAuthManager.signInWithDirectAccount(getApplication(), email, name)
         _currentScreen.value = AppScreen.MENU
         snackbarMessage.value = "Bienvenido, ${FirebaseAuthManager.currentUser.value?.displayName ?: email}"
+        triggerFirestoreSync()
     }
 
     fun signOut() {
+        FirestoreManager.stopListeners()
         FirebaseAuthManager.signOut(getApplication())
         _currentScreen.value = AppScreen.LOGIN
         snackbarMessage.value = "Has cerrado sesión correctamente."
@@ -472,21 +485,31 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     }
 
     // --- Space / Passphrase Management ---
+    private fun computeSpaceHash(moduleName: String, passphrase: String): String {
+        if (passphrase.isBlank()) return ""
+        val cleanStr = moduleName.lowercase().trim() + "_" + passphrase.lowercase().trim()
+        val md = java.security.MessageDigest.getInstance("SHA-256")
+        val digest = md.digest(cleanStr.toByteArray(Charsets.UTF_8))
+        return digest.joinToString("") { "%02x".format(it) }
+    }
+
     fun setTreasurySpace(name: String, passphrase: String) {
         _treasurySpaceName.value = name.ifBlank { "Cuenta Personal" }
-        _treasurySpaceHash.value = if (passphrase.isBlank()) "" else passphrase.hashCode().toString()
+        _treasurySpaceHash.value = computeSpaceHash("tesoreria", passphrase)
         viewModelScope.launch {
             repository.refreshTreasury(_treasurySpaceHash.value)
+            triggerFirestoreSync()
             snackbarMessage.value = "Espacio cambiado a: ${_treasurySpaceName.value}"
         }
     }
 
     fun setPersonalSpace(name: String, passphrase: String) {
         _personalSpaceName.value = name.ifBlank { "Cuenta Personal" }
-        _personalSpaceHash.value = if (passphrase.isBlank()) "" else passphrase.hashCode().toString()
+        _personalSpaceHash.value = computeSpaceHash("personales", passphrase)
         val monthKey = getPersonalMonthKey(_personalFilterYear.value, _personalFilterMonth.value)
         viewModelScope.launch {
             repository.refreshPersonal(_personalSpaceHash.value, monthKey)
+            triggerFirestoreSync()
             snackbarMessage.value = "Espacio cambiado a: ${_personalSpaceName.value}"
         }
     }

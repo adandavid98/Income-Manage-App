@@ -5,6 +5,7 @@ import com.example.incomemanage.model.ActivityLog
 import com.example.incomemanage.model.PersonalExpense
 import com.example.incomemanage.model.TreasuryTransaction
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,6 +14,10 @@ import kotlinx.coroutines.withContext
 class FinanceRepository(context: Context) {
 
     private val dbHelper = AppDatabaseHelper(context)
+    private val coroutineScope = kotlinx.coroutines.CoroutineScope(Dispatchers.IO)
+    private var currentUserId: String = ""
+    private var currentTreasurySpaceHash: String = ""
+    private var currentPersonalSpaceHash: String = ""
 
     private val _treasuryTransactions = MutableStateFlow<List<TreasuryTransaction>>(emptyList())
     val treasuryTransactions: StateFlow<List<TreasuryTransaction>> = _treasuryTransactions.asStateFlow()
@@ -32,12 +37,69 @@ class FinanceRepository(context: Context) {
     private val _logs = MutableStateFlow<List<ActivityLog>>(emptyList())
     val logs: StateFlow<List<ActivityLog>> = _logs.asStateFlow()
 
+    fun startFirestoreSync(userId: String, treasurySpaceHash: String, personalSpaceHash: String) {
+        currentUserId = userId
+        currentTreasurySpaceHash = treasurySpaceHash
+        currentPersonalSpaceHash = personalSpaceHash
+
+        FirestoreManager.listenTreasury(
+            userId = userId,
+            spaceHash = treasurySpaceHash,
+            onTransactionsUpdated = { cloudList ->
+                coroutineScope.launch {
+                    for (item in cloudList) {
+                        dbHelper.insertOrUpdateTreasury(item)
+                    }
+                    _treasuryTransactions.value = dbHelper.getAllTreasury(treasurySpaceHash)
+                }
+            },
+            onCategoriesUpdated = { cloudCats ->
+                coroutineScope.launch {
+                    for (c in cloudCats) {
+                        dbHelper.addCategory(c, "tesoreria")
+                    }
+                    _treasuryCategories.value = dbHelper.getCategories("tesoreria")
+                }
+            }
+        )
+
+        FirestoreManager.listenPersonalFinances(
+            userId = userId,
+            spaceHash = personalSpaceHash,
+            onExpensesUpdated = { cloudList ->
+                coroutineScope.launch {
+                    for (item in cloudList) {
+                        dbHelper.insertOrUpdatePersonalExpense(item)
+                    }
+                    _personalExpenses.value = dbHelper.getAllPersonalExpenses(personalSpaceHash)
+                }
+            },
+            onBudgetUpdated = { budgetMap ->
+                coroutineScope.launch {
+                    for ((monthYear, amt) in budgetMap) {
+                        dbHelper.setPersonalBudget(monthYear, personalSpaceHash, amt)
+                    }
+                }
+            },
+            onCategoriesUpdated = { cloudCats ->
+                coroutineScope.launch {
+                    for (c in cloudCats) {
+                        dbHelper.addCategory(c, "personales")
+                    }
+                    _personalCategories.value = dbHelper.getCategories("personales")
+                }
+            }
+        )
+    }
+
     suspend fun refreshTreasury(spaceHash: String) = withContext(Dispatchers.IO) {
+        currentTreasurySpaceHash = spaceHash
         _treasuryTransactions.value = dbHelper.getAllTreasury(spaceHash)
         _treasuryCategories.value = dbHelper.getCategories("tesoreria")
     }
 
     suspend fun refreshPersonal(spaceHash: String, monthYear: String) = withContext(Dispatchers.IO) {
+        currentPersonalSpaceHash = spaceHash
         _personalExpenses.value = dbHelper.getAllPersonalExpenses(spaceHash)
         _currentBudget.value = dbHelper.getPersonalBudget(monthYear, spaceHash)
         _personalCategories.value = dbHelper.getCategories("personales")
@@ -46,12 +108,14 @@ class FinanceRepository(context: Context) {
     suspend fun saveTreasuryTransaction(item: TreasuryTransaction) = withContext(Dispatchers.IO) {
         dbHelper.insertOrUpdateTreasury(item)
         dbHelper.addLog("tesoreria", "Guardar Transacción", "${item.concept} (${if (item.type == "ingreso") "+" else "-"}RD$ ${item.amount})")
+        FirestoreManager.saveTreasuryTransaction(currentUserId, item.spaceHash, item)
         refreshTreasury(item.spaceHash)
     }
 
     suspend fun deleteTreasuryTransaction(item: TreasuryTransaction) = withContext(Dispatchers.IO) {
         dbHelper.deleteTreasury(item.id)
         dbHelper.addLog("tesoreria", "Eliminar Transacción", item.concept)
+        FirestoreManager.deleteTreasuryTransaction(currentUserId, item.spaceHash, item.id)
         refreshTreasury(item.spaceHash)
     }
 
@@ -64,18 +128,21 @@ class FinanceRepository(context: Context) {
     suspend fun savePersonalExpense(item: PersonalExpense, currentMonthYear: String) = withContext(Dispatchers.IO) {
         dbHelper.insertOrUpdatePersonalExpense(item)
         dbHelper.addLog("personales", "Guardar Gasto", "${item.concept} (RD$ ${item.amount})")
+        FirestoreManager.savePersonalExpense(currentUserId, item.spaceHash, item)
         refreshPersonal(item.spaceHash, currentMonthYear)
     }
 
     suspend fun togglePersonalExpenseStatus(id: String, newStatus: String, spaceHash: String, currentMonthYear: String) = withContext(Dispatchers.IO) {
         dbHelper.updatePersonalExpenseStatus(id, newStatus)
         dbHelper.addLog("personales", "Cambiar Estado Gasto", "Nuevo estado: $newStatus")
+        FirestoreManager.updatePersonalExpenseStatus(currentUserId, spaceHash, id, newStatus)
         refreshPersonal(spaceHash, currentMonthYear)
     }
 
     suspend fun deletePersonalExpense(item: PersonalExpense, currentMonthYear: String) = withContext(Dispatchers.IO) {
         dbHelper.deletePersonalExpense(item.id)
         dbHelper.addLog("personales", "Eliminar Gasto", item.concept)
+        FirestoreManager.deletePersonalExpense(currentUserId, item.spaceHash, item.id)
         refreshPersonal(item.spaceHash, currentMonthYear)
     }
 
@@ -88,6 +155,7 @@ class FinanceRepository(context: Context) {
     suspend fun setBudget(monthYear: String, spaceHash: String, amount: Double) = withContext(Dispatchers.IO) {
         dbHelper.setPersonalBudget(monthYear, spaceHash, amount)
         _currentBudget.value = amount
+        FirestoreManager.savePersonalBudget(currentUserId, spaceHash, monthYear, amount)
     }
 
     suspend fun addCategory(name: String, module: String) = withContext(Dispatchers.IO) {
