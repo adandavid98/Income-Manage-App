@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Redirección inteligente instantánea desde el enlace viejo (GitHub Pages) al nuevo (Vercel) -->
+    <script>
+        if (window.location.hostname.indexOf('github.io') !== -1) {
+            window.location.replace("https://projectai-rho.vercel.app/" + window.location.search + window.location.hash);
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income Manage - Control de Ingresos y Gastos</title>
+    <meta name="description" content="Gestiona ingresos, gastos y presupuestos de forma organizada. Genera reportes mensuales y exporta respaldos en CSV de forma segura y privada.">
+    
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+    <link rel="apple-touch-icon" href="logo.jpg">
+    
+    <!-- Script para evitar destellos de tema claro en modo oscuro y comprobar protocolo -->
+    <script>
+        (function () {
+            const tema = localStorage.getItem("tema");
+            if (tema === "light") {
+                document.documentElement.classList.remove("dark");
+            } else {
+                document.documentElement.classList.add("dark");
+            }
+
+            if (window.location.protocol === 'file:') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    var w = document.getElementById('file-protocol-warning');
+                    if (w) w.classList.remove('hidden-element');
+                });
+            }
+        })();
+    </script>
+</head>
+<body class="login-view">
+    <div class="app-container">
+
+
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-logo" id="header-logo" role="button" tabindex="0" title="Volver al Menú Principal">
+                <div class="logo-icon logo-icon-svg">
+                    <img src="logo.jpg" alt="Income Manage Logo" width="38" height="38" style="display: block; border-radius: 10px; object-fit: cover;">
+                </div>
+                <div class="logo-text">
+                    <div class="logo-title-row">
+                        <h1>Income Manage</h1>
+                        <span id="module-indicator" class="module-indicator hidden-element"></span>
+                    </div>
+                    <p>Gestión y control de ingresos, gastos y presupuestos</p>
+                </div>
+            </div>
+            
+            <div class="header-right-actions">
+                <!-- Selector de Idioma (Traducción) -->
+                <div class="custom-translate-dropdown" id="custom-translate-dropdown">
+                    <button class="translate-trigger-btn" id="translate-trigger-btn" aria-label="Cambiar idioma" aria-haspopup="listbox" aria-expanded="false">
+                        <div class="lang-icon">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="2" y1="12" x2="22" y2="12"/>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                            </svg>
+                        </div>
+                        <span id="current-lang-code" class="current-lang-text">ES</span>
+                        <svg class="dropdown-chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M6 9l6 6 6-6"/>
+                        </svg>
+                    </button>
+                    <ul class="translate-options-menu" id="translate-options-menu" role="listbox">
+                        <li data-lang="es" class="translate-option active" role="option">ES - Español</li>
+                        <li data-lang="en" class="translate-option" role="option">EN - English</li>
+                        <li data-lang="fr" class="translate-option" role="option">FR - Français</li>
+                        <li data-lang="pt" class="translate-option" role="option">PT - Português</li>
+                        <li data-lang="it" class="translate-option" role="option">IT - Italiano</li>
+                        <li data-lang="de" class="translate-option" role="option">DE - Deutsch</li>
+                    </ul>
+                </div>
+                <!-- Google Translate Oculto -->
+                <div id="google_translate_element" style="position: absolute; top: -9999px; left: -9999px; visibility: hidden; width: 1px; height: 1px; overflow: hidden;"></div>
+                
+                <!-- Perfil de usuario (oculto por defecto) -->
+                <div id="user-profile" class="user-profile hidden-element">
+                    <img id="user-photo" src="https://lh3.googleusercontent.com/a/default-user=s96-c" alt="Foto de perfil">
+                    <span id="user-name">Usuario</span>
+                    <button id="btn-logout" class="btn-logout" title="Cerrar sesión">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <button id="btn-back-to-menu" class="btn-back-to-menu hidden-element" title="Volver al Menú Principal">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                    <span>Menú</span>
+                </button>
+                
+                <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Cambiar tema">
+                    <!-- Icono de Sol -->
+                    <svg class="sun-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/>
+                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                    <!-- Icono de Luna -->
+                    <svg class="moon-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Pantalla de Login (Google Sign-In) -->
+        <section id="login-section" class="login-section">
+            <div class="login-card">
+                <div class="login-card-header">
+                    <div class="login-logo-icon login-logo-icon-svg">
+                        <img src="logo.jpg" alt="Income Manage Logo" width="44" height="44" style="display: block; border-radius: 12px; object-fit: cover;">
+                    </div>
+                    <span class="login-brand-name">Income Manage</span>
+                </div>
+                <h2>Gestione sus ingresos y gastos</h2>
+                <p>Accede de forma segura y sincroniza tus transacciones en la nube desde cualquier dispositivo.</p>
+                
+                <div id="file-protocol-warning" class="hidden-element" style="margin-bottom: 16px; padding: 12px 14px; border-radius: 8px; background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; color: #fef3c7; font-size: 0.82rem; text-align: left; line-height: 1.4;">
+                    <strong>⚠️ Servidor web requerido:</strong> Para iniciar sesión con Google, abre la aplicación mediante un servidor local (ej. <code>http://localhost:...</code>, Live Server) o tu enlace web, ya que Google y los navegadores no permiten autenticación abriendo archivos directos <code>file:///</code>.
+                </div>
+
+                <button id="btn-login-google" class="btn-google">
+                    <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                    </svg>
+                    Iniciar sesión con Google
+                </button>
+                
+                <div class="login-footer">
+                    <span>Herramienta de gestionamiento de ingresos</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANTALLA DE SELECCIÓN DE MÓDULOS (MENÚ PRINCIPAL) -->
+        <section id="menu-section" class="menu-section hidden-element">
+            <div class="menu-header">
+                <h2>¿Qué módulo deseas utilizar hoy?</h2>
+                <p>Selecciona una opción para comenzar a gestionar tus finanzas</p>
+            </div>
+            
+            <div class="menu-grid">
+                <!-- Botón Módulo 1: Tesorería -->
+                <button id="btn-goto-tesoreria" class="menu-card card-glow-green">
+                    <div class="menu-card-icon-wrapper">
+                        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 21h18M5 21V8l7-4 7 4v13M12 8v5M10 13h4M12 11h.01M9 21v-4a3 3 0 016 0v4"/>
+                        </svg>
+                    </div>
+                    <div class="menu-card-info">
+                        <h3>Tesorería</h3>
+                        <p>Control de ingresos, gastos, ofrendas y reportes mensuales de la iglesia.</p>
+                    </div>
+                    <div class="menu-card-arrow">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </button>
+
+                <!-- Botón Módulo 2: Finanzas Personales -->
+                <button id="btn-goto-personales" class="menu-card card-glow-purple">
+                    <div class="menu-card-icon-wrapper">
+                        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                        </svg>
+                    </div>
+                    <div class="menu-card-info">
+                        <h3>Finanzas Personales</h3>
+                        <p>Organiza tus ingresos personales y gestiona el pago de tus gastos fijos y variables.</p>
+                    </div>
+                    <div class="menu-card-arrow">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+        <!-- CONTENEDOR DEL MÓDULO DE FINANZAS PERSONALES -->
+        <div id="personal-finances-container" class="personal-finances-container hidden-element">
+            <!-- Título y Filtros -->
+            <div class="pf-header-section" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                    <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-color);">Resumen de Finanzas</h2>
+                    <div id="pf-space-badge-container" class="space-badge-container">
+                        <div id="pf-space-badge" class="space-badge">
+                            <span class="space-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+                            <span id="pf-space-name">Cuenta Personal</span>
+                        </div>
+                        <button id="btn-pf-switch-space" class="space-switcher-btn" title="Cambiar espacio o passphrase">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                            </svg>
+                            <span>Cambiar Espacio</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="filters-container">
+                    <select id="pf-filter-month" aria-label="Seleccionar mes de finanzas personales">
+                        <option value="all">Todos (Anual)</option>
+                        <option value="0">Enero</option>
+                        <option value="1">Febrero</option>
+                        <option value="2">Marzo</option>
+                        <option value="3">Abril</option>
+                        <option value="4">Mayo</option>
+                        <option value="5">Junio</option>
+                        <option value="6">Julio</option>
+                        <option value="7">Agosto</option>
+                        <option value="8">Septiembre</option>
+                        <option value="9">Octubre</option>
+                        <option value="10">Noviembre</option>
+                        <option value="11">Diciembre</option>
+                    </select>
+                    <select id="pf-filter-year" aria-label="Seleccionar año de finanzas personales">
+                        <!-- Generado dinámicamente -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Dashboard de Finanzas Personales (Summary Cards) -->
+            <div class="summary-grid">
+                <!-- Presupuesto / Ingresos Mensuales -->
+                <div class="summary-card card-income">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 8v8M8 12h8"/>
+                        </svg>
+                    </div>
+                    <div class="card-info" style="width: 100%;">
+                        <h3>Ingreso / Presupuesto</h3>
+                        <div class="budget-input-wrapper">
+                            <span class="currency-symbol">RD$</span>
+                            <input type="number" id="pf-monthly-income" class="pf-budget-input" value="0.00" step="0.01" min="0">
+                        </div>
+                        
+                        <!-- Barra de Progreso de Presupuesto -->
+                        <div class="pf-budget-progress-container" style="margin-top: 10px; width: 100%;">
+                            <div class="pf-budget-progress-bar-bg" style="width: 100%; height: 6px; background-color: var(--border-color); border-radius: 4px; overflow: hidden; position: relative;">
+                                <div id="pf-budget-progress-bar" style="width: 0%; height: 100%; background-color: var(--income-color); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px; font-size: 7.5pt; color: var(--text-muted);">
+                                <span id="pf-budget-progress-pct">0% gastado</span>
+                                <span id="pf-budget-progress-rem">RD$ 0.00 restante</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gastos Pagados -->
+                <div class="summary-card card-expense">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M8 12h8"/>
+                        </svg>
+                    </div>
+                    <div class="card-info">
+                        <h3>Gastos Pagados</h3>
+                        <p id="pf-total-paid" class="amount bold red-text">RD$ 0.00</p>
+                    </div>
+                </div>
+
+                <!-- Gastos Pendientes (Pagar) -->
+                <div class="summary-card card-pending-expense">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                    </div>
+                    <div class="card-info">
+                        <h3>Gastos Pendientes</h3>
+                        <p id="pf-total-pending" class="amount bold orange-text">RD$ 0.00</p>
+                    </div>
+                </div>
+
+                <!-- Saldo Remanente -->
+                <div class="summary-card card-balance">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                    </div>
+                    <div class="card-info">
+                        <h3>Saldo Disponible</h3>
+                        <p id="pf-total-balance" class="amount bold blue-text">RD$ 0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario y Listado de Gastos -->
+            <div class="pf-content-layout">
+                <!-- Formulario de Nuevo Gasto Personal -->
+                <section class="section-card pf-form-section">
+                    <h2>Registrar Gasto Personal</h2>
+                    <form id="pf-expense-form" class="pf-expense-form" novalidate>
+                        <div class="form-group flex-1">
+                            <label for="pf-date">Fecha</label>
+                            <input type="date" id="pf-date" required>
+                        </div>
+                        <div class="form-group flex-2">
+                            <label for="pf-concept">Concepto / Gasto</label>
+                            <div class="input-autocomplete-wrapper" style="position: relative;">
+                                <input type="text" id="pf-concept" placeholder="Ej: Pago de Luz, Cena Familiar" required autocomplete="off">
+                                <div id="pf-autocomplete-list" class="autocomplete-items"></div>
+                            </div>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="pf-amount">Monto</label>
+                            <input type="number" id="pf-amount" placeholder="0.00" step="0.01" min="0.01" required>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="pf-category">Categoría</label>
+                            <input type="text" id="pf-category" placeholder="Ej: Comida, Servicios" list="pf-category-list">
+                            <datalist id="pf-category-list"></datalist>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="pf-type">Tipo de Gasto</label>
+                            <select id="pf-type" required>
+                                <option value="fijo" selected>Gasto Fijo</option>
+                                <option value="variable">Gasto Variable</option>
+                            </select>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="pf-status">Estado Inicial</label>
+                            <select id="pf-status" required>
+                                <option value="pagar" selected>Pagar (Pendiente)</option>
+                                <option value="pagado">Pagado</option>
+                            </select>
+                        </div>
+                        <div class="form-group-btn" style="display: flex; gap: 10px;">
+                            <button type="submit" class="btn-primary" id="btn-pf-submit">
+                                <span id="pf-submit-icon-wrapper" style="display: inline-flex; align-items: center;">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="12" y1="5" x2="12" y2="19"/>
+                                        <line x1="5" y1="12" x2="19" y2="12"/>
+                                    </svg>
+                                </span>
+                                <span id="pf-submit-text">Agregar</span>
+                            </button>
+                            <button type="button" class="btn-outline hidden-btn" id="btn-pf-cancel-edit">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Sección de Gráficos Analíticos -->
+                <div class="pf-charts-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 24px;">
+                    <section class="section-card pf-chart-card">
+                        <div class="pf-chart-header" style="margin-bottom: 15px;">
+                            <h2 style="font-size: 11pt; font-weight: 600; color: var(--text-color);">Distribución de Gastos</h2>
+                            <p style="font-size: 8pt; color: var(--text-muted); margin-top: 2px;">Distribución por categoría (Mes Seleccionado)</p>
+                        </div>
+                        <div style="position: relative; height: 260px; display: flex; align-items: center; justify-content: center;">
+                            <canvas id="pf-donut-chart"></canvas>
+                            <div id="pf-donut-empty" class="empty-state hidden-element" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background-color: var(--card-bg);">
+                                <p style="font-size: 9.5pt; color: var(--text-muted);">No hay gastos registrados en este período.</p>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section class="section-card pf-chart-card">
+                        <div class="pf-chart-header" style="margin-bottom: 15px;">
+                            <h2 style="font-size: 11pt; font-weight: 600; color: var(--text-color);">Comparativo Mensual</h2>
+                            <p style="font-size: 8pt; color: var(--text-muted); margin-top: 2px;">Presupuesto vs. Gastos (Año Seleccionado)</p>
+                        </div>
+                        <div style="position: relative; height: 260px; display: flex; align-items: center; justify-content: center;">
+                            <canvas id="pf-bar-chart"></canvas>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Columnas de Gastos Fijos y Variables -->
+                <div class="pf-expenses-columns">
+                    <!-- Sección de Gastos Fijos -->
+                    <section class="section-card pf-column-card">
+                        <div class="pf-column-header">
+                            <h2>Gastos Fijos</h2>
+                            <span class="pf-badge pf-badge-fixed" id="pf-fixed-count">0 items</span>
+                        </div>
+                        <div class="pf-expense-list" id="pf-fixed-list">
+                            <!-- Inyectado dinámicamente -->
+                        </div>
+                    </section>
+
+                    <!-- Sección de Gastos Variables -->
+                    <section class="section-card pf-column-card">
+                        <div class="pf-column-header">
+                            <h2>Gastos Variables / Imprevistos</h2>
+                            <span class="pf-badge pf-badge-variable" id="pf-variable-count">0 items</span>
+                        </div>
+                        <div class="pf-expense-list" id="pf-variable-list">
+                            <!-- Inyectado dinámicamente -->
+                        </div>
+                    </section>
+                </div>
+            </div>
+            
+            <!-- Acciones generales de Finanzas Personales -->
+            <section class="section-card actions-section" style="margin-top: 24px;">
+                <h2>Acciones</h2>
+                <div class="actions-buttons-grid">
+                    <button id="btn-pf-report" class="btn-outline">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        Generar reporte
+                    </button>
+                    <button id="btn-pf-export" class="btn-outline">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        Exportar respaldo
+                    </button>
+                    <button id="btn-pf-import-trigger" class="btn-outline">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M12 3v12M12 3l-5 5M12 3l5 5"/>
+                        </svg>
+                        Importar respaldo
+                    </button>
+                    <button id="btn-pf-manage-categories" class="btn-outline">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                        Configurar Categorías
+                    </button>
+                    <button id="btn-pf-config-passphrase" class="btn-outline">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        Configurar Passphrase
+                    </button>
+                    <button id="btn-pf-activity-logs" class="btn-outline" onclick="openActivityLogsModal('personales')">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        Logs de Actividad
+                    </button>
+                    <button id="btn-pf-archive-year" class="btn-outline" style="display: none;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                            <path d="M10 14l2 2 4-4"/>
+                        </svg>
+                        Cierre / Archivo Anual
+                    </button>
+                    <input type="file" id="pf-csv-file-input" accept=".csv, text/csv, application/vnd.ms-excel, text/plain" class="hidden-file-input" aria-hidden="true">
+                    
+                    <button id="btn-pf-clear-data" class="btn-danger-outline">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                        </svg>
+                        Limpiar datos
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- Contenedor del Dashboard principal (oculto antes de iniciar sesión) -->
+        <div id="dashboard-container" class="dashboard-container hidden-element">
+
+        <!-- Header y Estado de Espacio en Tesorería -->
+        <div class="t-header-section" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+            <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-color);">Gestión de Tesorería</h2>
+            <div id="tesoreria-space-badge-container" class="space-badge-container">
+                <div id="t-space-badge" class="space-badge">
+                    <span class="space-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+                    <span id="t-space-name">Cuenta Personal</span>
+                </div>
+                <button id="btn-t-switch-space" class="space-switcher-btn" title="Cambiar espacio o passphrase">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                    </svg>
+                    <span>Cambiar Espacio</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Formulario Registrar Transacción -->
+        <section class="section-card form-section">
+            <h2>Registrar transacción</h2>
+            <form id="transaction-form" class="transaction-form" novalidate>
+                <div class="form-group flex-1">
+                    <label for="t-date">Fecha</label>
+                    <input type="date" id="t-date" required>
+                </div>
+                <div class="form-group flex-2">
+                    <label for="t-concept">Concepto</label>
+                    <div class="input-autocomplete-wrapper">
+                        <input type="text" id="t-concept" placeholder="Ej: Ofrenda del culto" required autocomplete="off">
+                        <div id="autocomplete-list" class="autocomplete-items"></div>
+                    </div>
+                </div>
+                <div class="form-group flex-1">
+                    <label for="t-amount">Monto</label>
+                    <input type="number" id="t-amount" placeholder="0.00" step="0.01" min="0.01" required>
+                </div>
+                <div class="form-group flex-1">
+                    <label for="t-type">Tipo</label>
+                    <select id="t-type" required>
+                        <option value="ingreso" selected>Ingreso</option>
+                        <option value="gasto">Gasto</option>
+                    </select>
+                </div>
+                <div class="form-group flex-1">
+                    <label for="t-category">Categoría</label>
+                    <input type="text" id="t-category" placeholder="Ej: recibo, factura..." required>
+                </div>
+                <div class="form-group-btn form-actions-row">
+                    <button type="submit" class="btn-primary" id="btn-submit-form">
+                        <svg id="submit-btn-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        <span id="submit-btn-text">Agregar</span>
+                    </button>
+                    <button type="button" class="btn-outline hidden-btn" id="btn-cancel-edit">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Sección de Gráficos Analíticos de Tesorería -->
+        <div class="t-charts-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 24px;">
+            <section class="section-card t-chart-card">
+                <div class="t-chart-header" style="margin-bottom: 15px;">
+                    <h2 style="font-size: 11pt; font-weight: 600; color: var(--text-color);">Distribución de Gastos</h2>
+                    <p style="font-size: 8pt; color: var(--text-muted); margin-top: 2px;">Distribución por categoría (Mes Seleccionado)</p>
+                </div>
+                <div style="position: relative; height: 260px; display: flex; align-items: center; justify-content: center;">
+                    <canvas id="t-donut-chart"></canvas>
+                    <div id="t-donut-empty" class="empty-state hidden-element" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background-color: var(--card-bg);">
+                        <p style="font-size: 9.5pt; color: var(--text-muted);">No hay gastos registrados en este período.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section-card t-chart-card">
+                <div class="t-chart-header" style="margin-bottom: 15px;">
+                    <h2 style="font-size: 11pt; font-weight: 600; color: var(--text-color);">Evolución del Balance</h2>
+                    <p style="font-size: 8pt; color: var(--text-muted); margin-top: 2px;">Balance acumulado (Año Seleccionado)</p>
+                </div>
+                <div style="position: relative; height: 260px; display: flex; align-items: center; justify-content: center;">
+                    <canvas id="t-bar-chart"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <!-- Resumen y Filtro Mensual -->
+        <section class="summary-section">
+            <div class="summary-header">
+                <h2>Resumen mensual</h2>
+                <div class="filters-container">
+                    <select id="filter-month" aria-label="Seleccionar mes">
+                        <option value="all">Todos (Anual)</option>
+                        <option value="0">Enero</option>
+                        <option value="1">Febrero</option>
+                        <option value="2">Marzo</option>
+                        <option value="3">Abril</option>
+                        <option value="4">Mayo</option>
+                        <option value="5">Junio</option>
+                        <option value="6">Julio</option>
+                        <option value="7">Agosto</option>
+                        <option value="8">Septiembre</option>
+                        <option value="9">Octubre</option>
+                        <option value="10">Noviembre</option>
+                        <option value="11">Diciembre</option>
+                    </select>
+                    <select id="filter-year" aria-label="Seleccionar año">
+                        <!-- Generado dinámicamente -->
+                    </select>
+                </div>
+            </div>
+            
+            <div class="summary-grid">
+                <!-- Card Ingresos -->
+                <div class="summary-card card-income">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 8v8M8 12h8"/>
+                        </svg>
+                    </div>
+                    <div class="card-info">
+                        <h3>Ingresos</h3>
+                        <p id="total-income" class="amount">RD$0.00</p>
+                    </div>
+                </div>
+                <!-- Card Gastos -->
+                <div class="summary-card card-expense">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M8 12h8"/>
+                        </svg>
+                    </div>
+                    <div class="card-info">
+                        <h3>Gastos</h3>
+                        <p id="total-expense" class="amount">RD$0.00</p>
+                    </div>
+                </div>
+                <!-- Card Saldo -->
+                <div class="summary-card card-balance">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                    </div>
+                    <div class="card-info">
+                        <h3 id="label-balance">Saldo del mes</h3>
+                        <p id="total-balance" class="amount bold">RD$0.00</p>
+                    </div>
+                </div>
+                <!-- Card Saldo Histórico -->
+                <div class="summary-card card-historical-balance">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="10" rx="2" ry="2"/>
+                            <path d="M12 2a5 5 0 0 0-5 5v4h10V7a5 5 0 0 0-5-5z"/>
+                        </svg>
+                    </div>
+                    <div class="card-info">
+                        <h3>Saldo histórico</h3>
+                        <p id="historical-balance" class="amount bold">RD$0.00</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Listado de Transacciones -->
+        <section class="section-card table-section">
+            <h2 id="label-transactions-title">Transacciones del mes</h2>
+            <div class="table-responsive">
+                <table id="transactions-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Concepto</th>
+                            <th>Tipo</th>
+                            <th>Categoría</th>
+                            <th>Monto</th>
+                            <th class="text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactions-body">
+                        <!-- Las transacciones se renderizan aquí -->
+                    </tbody>
+                </table>
+            </div>
+            <!-- Estado vacío -->
+            <div id="empty-state" class="empty-state">
+                <p id="label-empty-state">No hay transacciones registradas para este mes.</p>
+            </div>
+        </section>
+
+        <!-- Acciones generales -->
+        <section class="section-card actions-section">
+            <h2>Acciones</h2>
+            <div class="actions-buttons-grid">
+                <button id="btn-monthly-report" class="btn-outline">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                    </svg>
+                    <span id="label-report-btn">Generar reporte</span>
+                </button>
+                <button id="btn-export-backup" class="btn-outline">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                    </svg>
+                    Exportar respaldo
+                </button>
+                <button id="btn-import-trigger" class="btn-outline">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M12 3v12M12 3l-5 5M12 3l5 5"/>
+                    </svg>
+                    Importar respaldo
+                </button>
+                <button id="btn-t-manage-categories" class="btn-outline">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    Configurar Categorías
+                </button>
+                <button id="btn-config-passphrase" class="btn-outline">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    Configurar Passphrase
+                </button>
+                <button id="btn-activity-logs" class="btn-outline" onclick="openActivityLogsModal('tesoreria')">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    Logs de Actividad
+                </button>
+                <button id="btn-t-archive-year" class="btn-outline" style="display: none;">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                        <path d="M10 14l2 2 4-4"/>
+                    </svg>
+                    Cierre / Archivo Anual
+                </button>
+                <input type="file" id="csv-file-input" accept=".csv, text/csv, application/vnd.ms-excel, text/plain" class="hidden-file-input" aria-hidden="true">
+                
+                <button id="btn-clear-data" class="btn-danger-outline">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                    </svg>
+                    Limpiar datos
+                </button>
+            </div>
+        </section>
+        </div> <!-- Fin dashboard-container -->
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <p>Herramienta de gestionamiento de ingresos</p>
+        </footer>
+    </div>
+
+    <!-- MODAL: Eliminar Transacción -->
+    <div id="modal-delete" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Eliminar transacción</h3>
+                <button class="modal-close-btn" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar esta transacción? Esta acción no se puede deshacer.</p>
+                <div class="transaction-detail-box" id="delete-detail-box">
+                    <!-- Rellenado dinámicamente -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-neutral" id="btn-delete-cancel">Cancelar</button>
+                <button class="btn-danger" id="btn-delete-confirm">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Confirmar Importación -->
+    <div id="modal-import" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Confirmar importación de respaldo</h3>
+                <button class="modal-close-btn" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert-box warning-alert">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                    </svg>
+                    <span>¡Atención! La importación de datos reemplazará todas las transacciones actuales en este navegador. Se recomienda exportar un respaldo primero.</span>
+                </div>
+                <p id="import-stats-text">¿Deseas continuar con la importación?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-neutral" id="btn-import-cancel">Cancelar</button>
+                <button class="btn-primary" id="btn-import-confirm">Importar y reemplazar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Limpiar Datos -->
+    <div id="modal-clear" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Limpiar todos los datos</h3>
+                <button class="modal-close-btn" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert-box danger-alert">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                    </svg>
+                    <span>Esta operación borrará de forma permanente todas las transacciones registradas. Asegúrate de haber exportado un respaldo si deseas conservarlas.</span>
+                </div>
+                <p>¿Estás completamente seguro de que deseas limpiar los datos?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-neutral" id="btn-clear-cancel">Cancelar</button>
+                <button class="btn-danger" id="btn-clear-confirm">Borrar definitivamente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Confirmar Importación Finanzas Personales -->
+    <div id="modal-pf-import" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Confirmar importación de finanzas personales</h3>
+                <button class="modal-close-btn" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert-box warning-alert">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                    </svg>
+                    <span>¡Atención! La importación de datos reemplazará todos tus gastos y presupuesto de finanzas personales actuales. Se recomienda exportar un respaldo primero.</span>
+                </div>
+                <p id="pf-import-stats-text">¿Deseas continuar con la importación?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-neutral" id="btn-pf-import-cancel">Cancelar</button>
+                <button class="btn-primary" id="btn-pf-import-confirm">Importar y reemplazar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Limpiar Datos Finanzas Personales -->
+    <div id="modal-pf-clear" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Limpiar todos los datos personales</h3>
+                <button class="modal-close-btn" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert-box danger-alert">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                    </svg>
+                    <span>Esta operación borrará de forma permanente todos tus gastos personales y tu presupuesto. Asegúrate de haber exportado un respaldo si deseas conservarlos.</span>
+                </div>
+                <p>¿Estás completamente seguro de que deseas limpiar tus datos de finanzas personales?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-neutral" id="btn-pf-clear-cancel">Cancelar</button>
+                <button class="btn-danger" id="btn-pf-clear-confirm">Borrar definitivamente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Administrar Categorías -->
+    <div id="modal-manage-categories" class="modal-overlay">
+        <div class="modal-container" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 id="mc-modal-title">Configurar Categorías</h3>
+                <button class="modal-close-btn" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
+                <div class="category-list-container" id="mc-category-list" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+                    <!-- Se inyecta la lista de categorías dinámicamente -->
+                </div>
+                
+                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+                
+                <h4 id="mc-form-title" style="font-size: 11pt; font-weight: 600; margin-bottom: 12px; color: var(--text-color);">Agregar Nueva Categoría</h4>
+                <form id="mc-category-form" style="display: flex; flex-direction: column; gap: 12px;">
+                    <input type="hidden" id="mc-category-index" value="-1">
+                    
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="mc-category-name" style="font-size: 9pt; margin-bottom: 4px; font-weight: 500;">Nombre de la Categoría</label>
+                        <input type="text" id="mc-category-name" placeholder="Ej: Supermercado, Ofrenda..." required style="height: 38px;">
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 9pt; margin-bottom: 6px; font-weight: 500; display: block;">Color de la Categoría</label>
+                        <div class="color-picker-grid" id="mc-color-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 5px;">
+                            <!-- Inyectado dinámicamente -->
+                        </div>
+                        <input type="hidden" id="mc-selected-color" value="#10b981">
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" id="btn-mc-submit" style="height: 38px; width: 100%; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 6px;">
+                        <span>Agregar</span>
+                    </button>
+                </form>
+            </div>
+            <div class="modal-footer" style="padding-top: 10px;">
+                <button class="btn-neutral" id="btn-mc-close" style="width: 100%;">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Acceso a Espacio / Passphrase -->
+    <div id="modal-module-passphrase" class="modal-overlay">
+        <div class="modal-container" style="max-width: 520px;">
+            <div class="modal-header">
+                <h3 id="passphrase-modal-title">Acceso a Módulo</h3>
+                <button class="modal-close-btn" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Alerta de Bloqueo -->
+                <div id="passphrase-blocked-alert" class="alert-box danger-alert hidden-element" style="margin-bottom: 15px;">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                    </svg>
+                    <span><strong>Acceso Restringido:</strong> Tu cuenta ha sido bloqueada para este módulo compartido por el usuario principal.</span>
+                </div>
+
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+                    Selecciona un espacio guardado en tu cuenta de Google o introduce una Passphrase para acceder a una cuenta compartida.
+                </p>
+
+                <!-- Lista de Espacios Guardados -->
+                <div id="saved-workspaces-list" style="margin-bottom: 16px;">
+                    <!-- Inyectado dinámicamente -->
+                </div>
+
+                <!-- Formulario Nueva / Otra Passphrase -->
+                <form id="form-enter-passphrase" style="display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="passphrase-input" style="font-size: 9pt; font-weight: 600;">Ingresar Frase de Acceso (Passphrase)</label>
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <input type="password" id="passphrase-input" placeholder="Ej: iglesia2026, pareja123..." style="height: 40px; padding-right: 40px;">
+                            <button type="button" id="btn-toggle-passphrase-vis" style="position: absolute; right: 10px; background: transparent; border: none; color: var(--text-muted); cursor: pointer;" title="Ver u ocultar clave">
+                                👁️
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" style="height: 40px; margin-top: 6px;">
+                        <span>Acceder con Passphrase</span>
+                    </button>
+                </form>
+
+                <div style="text-align: center; margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border-color); display: flex; flex-direction: column; gap: 8px;">
+                    <button id="btn-return-local-space" class="btn-neutral" style="width: 100%; font-weight: 600; border-color: rgba(16, 185, 129, 0.4); color: #10b981; display: none;">
+                        Volver a mi cuenta local
+                    </button>
+                    <button id="btn-passphrase-skip" class="btn-neutral" style="width: 100%;">
+                        🟢 Continuar a mi Cuenta Personal (Sin Passphrase)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Administrar Passphrase y Permisos de Integrantes -->
+    <div id="modal-manage-passphrase" class="modal-overlay">
+        <div class="modal-container" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 id="mmp-modal-title">Configurar Passphrase y Permisos</h3>
+                <button class="modal-close-btn" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 520px; overflow-y: auto;">
+                <!-- Pestañas de Navegación del Modal -->
+                <div style="display: flex; gap: 8px; margin-bottom: 14px; background: var(--input-bg); padding: 4px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <button type="button" id="mmp-tab-edit" style="flex: 1; padding: 8px; font-size: 0.83rem; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; background: var(--primary-color); color: white; transition: all 0.2s;">
+                        ⚙️ Configurar Espacio
+                    </button>
+                    <button type="button" id="mmp-tab-members" style="flex: 1; padding: 8px; font-size: 0.83rem; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; background: transparent; color: var(--text-muted); transition: all 0.2s;">
+                        👥 Integrantes y Permisos <span id="mmp-tab-members-badge" style="font-size: 0.72rem; padding: 2px 6px; border-radius: 10px; background: rgba(59, 130, 246, 0.2); color: #60a5fa; margin-left: 4px;"></span>
+                    </button>
+                    <button type="button" id="mmp-tab-create" style="flex: 1; padding: 8px; font-size: 0.83rem; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; background: transparent; color: var(--text-muted); transition: all 0.2s;">
+                        ➕ Crear Nuevo Espacio
+                    </button>
+                </div>
+
+                <!-- SECCIÓN 1: Configuración y Datos del Espacio -->
+                <div id="mmp-section-config">
+                    <!-- Banner Informativo de Espacio Activo -->
+                    <div id="mmp-active-space-info" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); padding: 12px 14px; border-radius: var(--radius-sm); margin-bottom: 14px;">
+                        <div style="font-weight: 600; font-size: 0.88rem; color: var(--text-color); display: flex; align-items: center; gap: 6px;">
+                            <span>📍 Espacio Activo:</span>
+                            <span id="mmp-current-space-badge" style="color: var(--primary-color); font-weight: 700;">Cuenta Personal (Google)</span>
+                        </div>
+                        <p id="mmp-current-space-desc" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; margin-bottom: 0;">
+                            Estás asignando o modificando el nombre/passphrase de tu espacio de trabajo actual.
+                        </p>
+                    </div>
+
+                    <!-- Datos del Espacio Actual / Nuevo -->
+                    <div style="background-color: var(--input-bg); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 16px;">
+                        <h4 id="mmp-section-title" style="font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; color: var(--text-color);">Configurar Nombre y Passphrase</h4>
+                        <p id="mmp-section-desc" style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">Modifica los datos de este espacio. Si es tu espacio local, al ponerle passphrase podrás compartirlo.</p>
+                        
+                        <form id="mmp-space-form" style="display: flex; flex-direction: column; gap: 10px;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="mmp-space-name-input" style="font-size: 8.5pt; font-weight: 600;">Nombre del Espacio</label>
+                                <input type="text" id="mmp-space-name-input" placeholder="Ej: Tesorería Iglesia Principal" required style="height: 36px;">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="mmp-passphrase-input" style="font-size: 8.5pt; font-weight: 600;">Frase de Acceso (Passphrase)</label>
+                                <input type="text" id="mmp-passphrase-input" placeholder="Ej: iglesia2026" style="height: 36px;">
+                            </div>
+
+                            <!-- Opción de copiar datos actuales al crear nuevo espacio -->
+                            <div id="mmp-copy-local-container" style="display: none; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-color); margin-top: 2px;">
+                                <input type="checkbox" id="mmp-copy-local-check" style="width: 16px; height: 16px; cursor: pointer;">
+                                <label for="mmp-copy-local-check" style="cursor: pointer; user-select: none;">
+                                    📦 Copiar mis datos actuales a este nuevo espacio (Desmarcar para iniciar en blanco)
+                                </label>
+                            </div>
+
+                            <button type="submit" id="mmp-space-submit-btn" class="btn-primary" style="height: 36px; width: 100%; margin-top: 4px;">💾 Guardar Cambios en mi Espacio Activo</button>
+                        </form>
+
+                        <!-- Botón para Desconectarse o Dejar de Compartir -->
+                        <div id="mmp-disconnect-container" style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-color); text-align: center;">
+                            <button type="button" id="btn-mmp-disconnect" class="btn-danger-outline" style="width: 100%; height: 34px; font-size: 0.82rem;">
+                                🔌 Desconectarme de este Espacio (Volver a mi Cuenta Local)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Transferir Propiedad (Exclusivo Módulo de Tesorería) -->
+                    <div id="mmp-transfer-section" style="background-color: rgba(168, 85, 247, 0.08); padding: 14px; border-radius: var(--radius-sm); border: 1px solid rgba(168, 85, 247, 0.25); margin-bottom: 10px;">
+                        <h4 id="mmp-transfer-title" style="font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; color: #a855f7;">🔄 Transferir Propiedad del Módulo de Tesorería</h4>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Traspasa todos los derechos de Usuario Principal a otro integrante. Si la persona no ha usado la app, escribe su correo de Google para dejar una transferencia pendiente.</p>
+                        
+                        <form id="mmp-transfer-form" style="display: flex; flex-direction: column; gap: 10px;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label id="mmp-transfer-label" for="mmp-new-owner-email" style="font-size: 8.5pt; font-weight: 600;">Correo de Google del Nuevo Tesorero Principal</label>
+                                <input type="email" id="mmp-new-owner-email" placeholder="Ej: nuevo.tesorero@gmail.com" required style="height: 36px;">
+                            </div>
+                            <button type="submit" class="btn-danger-outline" style="height: 36px; border-color: #a855f7; color: #a855f7;">Transferir Control de Propietario</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 2: Lista de Integrantes Conectados y Permisos -->
+                <div id="mmp-section-members" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div>
+                            <h4 style="font-size: 0.95rem; font-weight: 600; color: var(--text-color); margin-bottom: 2px;">Integrantes Conectados</h4>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0;">Gestiona permisos individuales (Solo Ver, Agregar, Editar, Eliminar o Bloqueado).</p>
+                        </div>
+                        <button type="button" id="btn-mmp-refresh-members" class="btn-neutral" style="padding: 4px 10px; font-size: 0.78rem; height: 30px;" title="Actualizar lista de integrantes">
+                            🔄 Actualizar
+                        </button>
+                    </div>
+                    
+                    <div class="members-table-container" style="margin-top: 10px;">
+                        <table class="members-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario / Correo</th>
+                                    <th style="text-align: center;" title="Permiso para agregar registros">Agregar</th>
+                                    <th style="text-align: center;" title="Permiso para editar registros">Editar</th>
+                                    <th style="text-align: center;" title="Permiso para eliminar registros">Eliminar</th>
+                                    <th style="text-align: center;" title="Solo Ver (Desactiva agregar, editar y eliminar)">Solo Ver</th>
+                                    <th style="text-align: center;" title="Bloquear acceso total al espacio">Bloqueado</th>
+                                    <th style="text-align: center;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mmp-members-tbody">
+                                <!-- Inyectado dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding-top: 10px;">
+                <button class="btn-neutral" id="btn-mmp-close" style="width: 100%;">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Logs de Actividad -->
+    <div id="modal-activity-logs" class="modal-overlay">
+        <div class="modal-container" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3>Logs de Actividad del Módulo</h3>
+                <button class="modal-close-btn" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 480px; overflow-y: auto;">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+                    Historial cronológico de modificaciones (Crear, Editar, Eliminar y Cambios de Administración) registradas en este espacio.
+                </p>
+                
+                <div class="logs-table-container">
+                    <table class="logs-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha y Hora</th>
+                                <th>Usuario</th>
+                                <th>Acción</th>
+                                <th>Detalle</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-tbody">
+                            <!-- Inyectado dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-neutral" id="btn-logs-close" style="width: 100%;">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CIERRE Y ARCHIVO ANUAL -->
+    <div id="modal-archive-year" class="modal-overlay">
+        <div class="modal-container" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 id="archive-modal-title">Cierre y Archivo Anual</h3>
+                <button type="button" class="modal-close-btn" id="btn-close-archive-modal" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
+                    Esta herramienta te permite generar un respaldo histórico de un año específico y opcionalmente liberarlo de la base de datos activa para mantener la cuenta ligera y rápida.
+                </p>
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="archive-year-select" style="font-weight: 600; font-size: 0.85rem; color: var(--text-color); margin-bottom: 6px; display: block;">
+                        Selecciona el Año a Archivar:
+                    </label>
+                    <select id="archive-year-select" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); font-weight: 600; font-size: 1rem;">
+                        <!-- Opciones de años inyectadas dinámicamente -->
+                    </select>
+                </div>
+
+                <!-- Resumen de registros a archivar -->
+                <div id="archive-summary-box" style="padding: 14px; border-radius: 8px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">Registros encontrados:</span>
+                        <strong id="archive-stat-records" style="font-size: 0.95rem; color: var(--text-color);">0 registros</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">Monto total acumulado:</span>
+                        <strong id="archive-stat-amount" style="font-size: 0.95rem; color: var(--primary-color);">RD$ 0.00</strong>
+                    </div>
+                </div>
+
+                <!-- Aviso de Seguridad -->
+                <div style="padding: 12px 14px; border-radius: 8px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--text-color); font-size: 0.82rem; line-height: 1.45; margin-bottom: 6px;">
+                    <strong style="color: #10b981; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        Protección Automática:
+                    </strong>
+                    Al presionar el botón, el sistema <strong>descargará automáticamente</strong> el archivo CSV/Excel con todas las transacciones de ese año en tu dispositivo antes de aplicar el cierre.
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 10px;">
+                <button type="button" class="btn-neutral" id="btn-cancel-archive" style="flex: 1;">Cancelar</button>
+                <button type="button" class="btn-primary" id="btn-execute-archive" style="flex: 2; display: flex; align-items: center; justify-content: center; gap: 8px; background: #e11d48;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                    </svg>
+                    <span>Descargar y Archivar Año</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- COPILOT DE FINANZAS PERSONALES -->
+    <div id="pf-copilot-container" class="pf-copilot-container hidden-element">
+        <!-- Botón flotante -->
+        <button id="btn-pf-copilot-toggle" class="btn-pf-copilot-toggle" aria-label="Abrir Copilot de Finanzas" title="Abrir Copilot de Finanzas">
+            <svg class="chat-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <svg class="close-icon hidden-element" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
+
+        <!-- Ventana de Chat -->
+        <div id="pf-copilot-chat-window" class="pf-copilot-chat-window">
+            <div class="copilot-header">
+                <div class="copilot-header-info">
+                    <div class="copilot-avatar">🤖</div>
+                    <div>
+                        <h3>Finanzas Copilot</h3>
+                        <span class="status-indicator online">En línea</span>
+                    </div>
+                </div>
+                <div class="copilot-header-actions">
+                    <button id="btn-copilot-settings" class="copilot-icon-btn" title="Configurar API Key">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                    </button>
+                    <button id="btn-copilot-close" class="copilot-icon-btn" title="Cerrar" style="font-size: 20px; line-height: 1;">
+                        &times;
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel de Configuración de API Key -->
+            <div id="copilot-settings-panel" class="copilot-settings-panel hidden-element">
+                <h4>Configuración de API Key</h4>
+                <p>Ingresa tu clave de Gemini API para activar las respuestas avanzadas con IA. Puedes obtener una gratis en <a href="https://aistudio.google.com/" target="_blank" rel="noopener">Google AI Studio</a>.</p>
+                <div class="settings-form-group">
+                    <input type="password" id="copilot-api-key-input" placeholder="Introduce tu Gemini API Key...">
+                    <button id="btn-copilot-save-key" class="btn-primary" type="button">Guardar</button>
+                </div>
+                <div id="copilot-key-status" class="key-status-text"></div>
+            </div>
+
+            <!-- Zona de Mensajes -->
+            <div id="copilot-messages-container" class="copilot-messages-container">
+                <!-- Se inyectan los mensajes dinámicamente -->
+            </div>
+
+            <!-- Formulario de Entrada -->
+            <form id="copilot-input-form" class="copilot-input-form">
+                <input type="text" id="copilot-message-input" placeholder="Pregúntame sobre tus finanzas..." required autocomplete="off">
+                <button type="submit" id="btn-copilot-send" aria-label="Enviar">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"/>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mensajes Toast para Notificaciones -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Contenedor para impresión de Reporte PDF -->
+    <div id="print-report-container" class="print-only"></div>
+
+    <!-- Botón de Subir al Inicio -->
+    <button id="btn-scroll-top" class="btn-scroll-top" aria-label="Subir al inicio" title="Subir al inicio">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"/>
+        </svg>
+    </button>
+
+    <!-- Script de Inicialización de Google Translate -->
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'es',
+                includedLanguages: 'es,en,fr,pt,it,de',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+    </script>
+    <script src="chart.js"></script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
+

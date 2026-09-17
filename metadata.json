@@ -1,0 +1,6 @@
+{
+  "name": "Income Manage",
+  "description": "Gestión y control de ingresos, gastos y presupuestos para finanzas personales y tesorería.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
